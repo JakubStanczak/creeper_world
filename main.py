@@ -10,7 +10,7 @@ pygame.init()
 
 pygame.display.set_caption("Gray goo by Kuba")
 map_ground = ground.Ground()
-gray_goo = goo.Goo(map_ground.segment_width)
+gray_goo = goo.Goo(map_ground.segment_width, map_ground.segment_step)
 menu = side_menu.SideMenu()
 
 def save_level():
@@ -65,7 +65,7 @@ while run:
                 elif event.key == pygame.K_RIGHT:
                     map_completed = map_ground.add_segment()
 
-                # save
+                # save/load
                 elif event.key == pygame.K_s:
                     save_level()
                 elif event.key == pygame.K_l:
@@ -78,6 +78,5 @@ while run:
 
                 # if map_completed:
                 #     game_mode = "game_paused"
-    # pygame.time.delay(50)
     time()
     draw()
