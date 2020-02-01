@@ -45,7 +45,7 @@ def draw():
     pygame.display.update()
 
 def time():
-    pass
+    gray_goo.gravity(map_ground)
 
 pygame.key.set_repeat(2, 30)
 run = True
@@ -78,6 +78,6 @@ while run:
 
                 # if map_completed:
                 #     game_mode = "game_paused"
-
+    pygame.time.delay(50)
     time()
     draw()
