@@ -8,7 +8,7 @@ class Ground:
         self.min_y = screen_height - 10
         self.current_x = 0
         self.segment_width = 5
-        self.segment_step = 7
+        self.segment_step = 8
         self.segments = []
         self.starting_pos_width = 50
 

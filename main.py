@@ -78,6 +78,6 @@ while run:
 
                 # if map_completed:
                 #     game_mode = "game_paused"
-    pygame.time.delay(50)
+    # pygame.time.delay(50)
     time()
     draw()
