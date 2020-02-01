@@ -19,7 +19,7 @@ class Ground:
     def add_segment(self, up=None):
         if self.current_x > screen_width:
             return True
-        print("adding segment")
+        # print("adding segment")
         if self.starting_pos_width < self.current_x < screen_width - self.starting_pos_width:
             if up is False and self.current_y < self.min_y:
                 self.current_y += self.segment_step
@@ -38,11 +38,15 @@ class GroundSegment:
     def __init__(self, x, y, width):
         self.x = x
         self.y = y
-        self.thickness = width
+        self.width = width
         self.color = (205, 133, 63)
 
     def draw(self):
-        pygame.draw.rect(win, self.color, (self.x, self.y, self.thickness, screen_height))
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, screen_height))
+
+    def csv_data(self):
+        segment_data = {"x": self.x, "y": self.y, "width": self.width}
+        return segment_data
 
     def __repr__(self):
         return "x: {} y:{}".format(self.x, self.y)
