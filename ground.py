@@ -17,7 +17,7 @@ class Ground:
             segment.draw()
 
     def add_segment(self, up=None):
-        if self.current_x > screen_width:
+        if self.current_x > screen_width - self.segment_width:
             return True
         # print("adding segment")
         if self.starting_pos_width < self.current_x < screen_width - self.starting_pos_width:

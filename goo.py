@@ -14,6 +14,8 @@ class Goo:
             for _ in range(self.grid_y_dim):
                 line.append(None)
             self.goo_grid.append(line)
+        self.left_borders = {}
+        self.right_borders = {}
         print("goo y dim = {}".format(self.grid_y_dim))
         print("goo x dim = {}".format(self.grid_x_dim))
 
@@ -49,8 +51,29 @@ class Goo:
             print("radius of destroyed cells = {}".format(rad_of_destroyed_cells))
             for i in range(x_idx - rad_of_destroyed_cells, x_idx + rad_of_destroyed_cells):
                 for j in range(y_idx - rad_of_destroyed_cells, y_idx + rad_of_destroyed_cells):
-                    self.goo_grid[i][j] = None
+                    if i < self.grid_x_dim and j < self.grid_y_dim:
+                        self.goo_grid[i][j] = None
 
+    def analyze_map(self, ground):
+        for x_idx in range(0, self.grid_x_dim):
+            for y_idx in range(0, self.grid_y_dim):
+                self.left_borders[str(x_idx) + " " + str(y_idx)] = self.find_border(x_idx, y_idx, ground, "L")
+                self.right_borders[str(x_idx) + " " + str(y_idx)] = self.find_border(x_idx, y_idx, ground, "R")
+        print(self.left_borders)
+
+    def find_border(self, x_idx, y_idx, map_ground, direction):
+        y_idx = y_idx
+        x_idx = x_idx
+        border_found = False
+        while not border_found:
+            if direction == "L":
+                x_idx -= 1
+            else:
+                x_idx += 1
+            if x_idx == - 1 or x_idx == len(map_ground.segments):
+                return x_idx
+            if map_ground.segments[x_idx].y <= y_idx * self.pix_height:
+                return x_idx
 
 class GooPix:
     def __init__(self, x_idx, y_idx, width, height):
@@ -79,8 +102,8 @@ class GooPix:
             if self.y_idx < goo_y_idx - 1:
                 self.move_to(goo, self.x_idx, self.y_idx + 1)
             else:
-                left_border_idx = self.find_border(map_ground, "L")
-                right_border_idx = self.find_border(map_ground, "R")
+                left_border_idx = goo.left_borders[str(self.x_idx) + " " + str(self.y_idx + 1)]
+                right_border_idx = goo.right_borders[str(self.x_idx) + " " + str(self.y_idx + 1)]
                 space_on_left = False
                 for x_idx in range(self.x_idx, left_border_idx, -1):
                     if goo.goo_grid[x_idx][self.y_idx+1] is None:
@@ -88,22 +111,10 @@ class GooPix:
                         space_on_left = True
                         break
                 if not space_on_left:
-                    for x_idx in range(self.x_idx, right_border_idx - 1):
+                    for x_idx in range(self.x_idx, right_border_idx):
                         if goo.goo_grid[x_idx][self.y_idx+1] is None:
                             self.move_to(goo, x_idx, self.y_idx+1)
                             break
-
-    def find_border(self, map_ground, direction):
-        y_idx = self.y_idx + 1
-        x_idx = self.x_idx
-        border_found = False
-        while not border_found:
-            if direction == "L":
-                x_idx -= 1
-            else:
-                x_idx += 1
-            if map_ground.segments[x_idx].y <= y_idx * self.height or x_idx == 0 or x_idx == len(map_ground.segments)-1:
-                return x_idx
 
     def move_to(self, goo, x_idx, y_idx):
         goo.goo_grid[self.x_idx][self.y_idx] = None
