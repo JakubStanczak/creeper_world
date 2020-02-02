@@ -34,6 +34,24 @@ class Goo:
             if goo_pix is not None:
                 goo_pix.gravity(map_ground, self)
 
+    def clear(self):
+        for x in range(self.grid_x_dim):
+            for y in range(self.grid_y_dim):
+                self.goo_grid[x][y] = None
+
+    def explosion(self, radius, x, y):
+        x_idx = x // self.pix_width
+        y_idx = y // self.pix_height
+        if radius == 1:
+            self.goo_grid[x_idx][y_idx] = None
+        else:
+            rad_of_destroyed_cells = radius // (max(self.pix_height, self.pix_width))
+            print("radius of destroyed cells = {}".format(rad_of_destroyed_cells))
+            for i in range(x_idx - rad_of_destroyed_cells, x_idx + rad_of_destroyed_cells):
+                for j in range(y_idx - rad_of_destroyed_cells, y_idx + rad_of_destroyed_cells):
+                    self.goo_grid[i][j] = None
+
+
 class GooPix:
     def __init__(self, x_idx, y_idx, width, height):
         self.x_idx = x_idx
@@ -84,7 +102,7 @@ class GooPix:
                 x_idx -= 1
             else:
                 x_idx += 1
-            if map_ground.segments[x_idx].y <= y_idx * self.height or x_idx == 0 or x_idx == len(map_ground.segments) - 1:
+            if map_ground.segments[x_idx].y <= y_idx * self.height or x_idx == 0 or x_idx == len(map_ground.segments)-1:
                 return x_idx
 
     def move_to(self, goo, x_idx, y_idx):
@@ -93,6 +111,9 @@ class GooPix:
         self.y_idx = y_idx
         goo.goo_grid[self.x_idx][self.y_idx] = self
 
+    def csv_data(self, goo):
+        goo_pix_data = {"object_type": "goo_pix", "x": self.x_idx * goo.pix_width, "y": self.y_idx * goo.pix_height, "width": self.width}
+        return goo_pix_data
 
     def __repr__(self):
         return "x_idx:{} y_idx:{}".format(self.x_idx, self.y_idx)

@@ -1,9 +1,11 @@
 import pygame
 import csv
+from itertools import chain
 
 import ground
 import side_menu
 import goo
+import weapons
 from screen import screen_width, screen_height, win
 
 pygame.init()
@@ -12,26 +14,32 @@ pygame.display.set_caption("Gray goo by Kuba")
 map_ground = ground.Ground()
 gray_goo = goo.Goo(map_ground.segment_width, map_ground.segment_step)
 menu = side_menu.SideMenu()
+used_weapons = weapons.Weapons()
 
 def save_level():
     with open("level.csv", "w") as level_csv:
-        fields = ["x", "y", "width"]
+        fields = ["object_type", "x", "y", "width"]
         log_writer = csv.DictWriter(level_csv, fieldnames=fields)
         log_writer.writeheader()
         for segment in map_ground.segments:
             line_csv = segment.csv_data()
             log_writer.writerow(line_csv)
+        for goo_pix in chain.from_iterable(gray_goo.goo_grid):
+            if goo_pix is not None:
+                line_csv = goo_pix.csv_data(gray_goo)
+                log_writer.writerow(line_csv)
     print("Map saved")
 
 def load_level():
-    # try:
+    map_ground.clear()
+    gray_goo.clear()
     with open("level.csv") as level_csv:
         map_reader = csv.DictReader(level_csv)
-        for segment in map_reader:
-            map_ground.segments.append(ground.GroundSegment(int(segment["x"]), int(segment["y"]), int(segment["width"])))
-    # except FileNotFoundError:
-    #     global game_state
-    #     game_state = "level maker"
+        for line in map_reader:
+            if line["object_type"] == "ground":
+                map_ground.segments.append(ground.GroundSegment(int(line["x"]), int(line["y"]), int(line["width"])))
+            if line["object_type"] == "goo_pix":
+                gray_goo.more_goo(int(line["x"]), int(line["y"]))
     print("Map loaded")
 
 def draw():
@@ -39,6 +47,7 @@ def draw():
     map_ground.draw()
     menu.draw()
     gray_goo.draw()
+    used_weapons.draw()
     if game_mode == "map_generator":
         pygame.draw.line(win, (255, 0, 0), (map_ground.starting_pos_width, 0), (map_ground.starting_pos_width, screen_height))
         pygame.draw.line(win, (255, 0, 0), (screen_width - map_ground.starting_pos_width, 0), (screen_width - map_ground.starting_pos_width, screen_height))
@@ -46,6 +55,7 @@ def draw():
 
 def time():
     gray_goo.gravity(map_ground)
+    used_weapons.time(map_ground, gray_goo)
 
 pygame.key.set_repeat(2, 30)
 run = True
@@ -70,11 +80,17 @@ while run:
                     save_level()
                 elif event.key == pygame.K_l:
                     load_level()
-                # more goo test
+                # goo test
                 elif event.key == pygame.K_g:
                     mouse_pos = pygame.mouse.get_pos()
                     gray_goo.more_goo(*mouse_pos)
-
+                # bomb test
+                elif event.key == pygame.K_b:
+                    mouse_pos = pygame.mouse.get_pos()
+                    used_weapons.add_weapon("bomb", *mouse_pos)
+                elif event.key == pygame.K_n:
+                    mouse_pos = pygame.mouse.get_pos()
+                    used_weapons.add_weapon("bullet", *mouse_pos)
 
                 # if map_completed:
                 #     game_mode = "game_paused"

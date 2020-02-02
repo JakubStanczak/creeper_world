@@ -7,8 +7,8 @@ class Ground:
         self.current_y = self.start_y
         self.min_y = screen_height - 10
         self.current_x = 0
-        self.segment_width = 5
-        self.segment_step = 8
+        self.segment_width = 10
+        self.segment_step = 10
         self.segments = []
         self.starting_pos_width = 50
 
@@ -29,6 +29,8 @@ class Ground:
         self.current_x += self.segment_width
         return False
 
+    def clear(self):
+        self.segments.clear()
 
     def __repr__(self):
         return str(self.segments)
@@ -45,7 +47,7 @@ class GroundSegment:
         pygame.draw.rect(win, self.color, (self.x, self.y, self.width, screen_height))
 
     def csv_data(self):
-        segment_data = {"x": self.x, "y": self.y, "width": self.width}
+        segment_data = {"object_type": "ground", "x": self.x, "y": self.y, "width": self.width}
         return segment_data
 
     def __repr__(self):
