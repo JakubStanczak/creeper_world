@@ -2,8 +2,8 @@ import pygame
 from screen import win
 
 weapon_types = {
-    "bomb": {"explosion_delay": 200, "explosion_time": 20, "explosion_size": 20, "explosion_color": (255, 0, 0), "weapon_size": 5, "weapon_color": (185, 190, 0), },
-    "bullet": {"explosion_delay": 0, "explosion_time": 10, "explosion_size": 1, "explosion_color": (255, 0, 0), "weapon_size": 2, "weapon_color": (0, 0, 0)}
+    "bomb": {"explosion_delay": 20, "explosion_time": 5, "explosion_size": 20, "explosion_color": (255, 0, 0), "weapon_size": 5, "weapon_color": (185, 190, 0), },
+    "bullet": {"explosion_delay": 0, "explosion_time": 2, "explosion_size": 1, "explosion_color": (255, 0, 0), "weapon_size": 2, "weapon_color": (0, 0, 0)}
     }
 
 class Weapons:
@@ -35,7 +35,7 @@ class Weapon:
         self.explosion_time = weapon_types[weapon_type]["explosion_time"]
         self.x = x
         self.y = y
-        self.falling_speed = 2
+        self.falling_speed = 10
         self.exploded = False
 
     def time(self, goo, ground):

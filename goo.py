@@ -24,7 +24,6 @@ class Goo:
         y_idx = y // self.pix_height
         if self.goo_grid[x_idx][y_idx] is None:
             self.goo_grid[x_idx][y_idx] = GooPix(x_idx, y_idx, self.pix_width, self.pix_height)
-            print(self.goo_grid[x_idx][y_idx])
 
     def draw(self):
         for goo_pix in chain.from_iterable(self.goo_grid):

@@ -2,112 +2,125 @@ import pygame
 import csv
 from itertools import chain
 
-import ground
+import ground as ground_class
 import side_menu
-import goo
-import weapons
-import buildings
+import goo as goo_class
+import weapons as weapon_class
+import buildings as buildings_class
 from screen import screen_width, screen_height, win
 
 pygame.init()
 
 pygame.display.set_caption("Gray goo by Kuba")
-map_ground = ground.Ground()
-gray_goo = goo.Goo(map_ground.segment_width, map_ground.segment_step)
+ground = ground_class.Ground()
+goo = goo_class.Goo(ground.segment_width, ground.segment_step)
 menu = side_menu.SideMenu()
-used_weapons = weapons.Weapons()
-buildings_on_map = buildings.Buildings()
+weapons = weapon_class.Weapons()
+buildings = buildings_class.Buildings()
 
 def save_level():
     with open("level.csv", "w") as level_csv:
         fields = ["object_type", "x", "y", "width"]
         log_writer = csv.DictWriter(level_csv, fieldnames=fields)
         log_writer.writeheader()
-        for segment in map_ground.segments:
+        for segment in ground.segments:
             line_csv = segment.csv_data()
             log_writer.writerow(line_csv)
-        for goo_pix in chain.from_iterable(gray_goo.goo_grid):
+        for goo_pix in chain.from_iterable(goo.goo_grid):
             if goo_pix is not None:
-                line_csv = goo_pix.csv_data(gray_goo)
+                line_csv = goo_pix.csv_data(goo)
                 log_writer.writerow(line_csv)
     print("Map saved")
 
 def load_level():
-    map_ground.clear()
-    gray_goo.clear()
+    ground.clear()
+    goo.clear()
     map_analyzed = False
     with open("level.csv") as level_csv:
         map_reader = csv.DictReader(level_csv)
         for line in map_reader:
             if line["object_type"] == "ground":
-                map_ground.segments.append(ground.GroundSegment(int(line["x"]), int(line["y"]), int(line["width"])))
+                ground.segments.append(ground_class.GroundSegment(int(line["x"]), int(line["y"]), int(line["width"])))
             if line["object_type"] == "goo_pix":
                 if map_analyzed is False:
-                    gray_goo.analyze_map(map_ground)
+                    goo.analyze_map(ground)
                     map_analyzed = True
-                gray_goo.more_goo(int(line["x"]), int(line["y"]))
+                goo.more_goo(int(line["x"]), int(line["y"]))
     print("Map loaded")
+    global map_completed
+    map_completed = True
 
 def draw():
     win.fill((255, 255, 255))
-    map_ground.draw()
-    buildings_on_map.draw()
-    gray_goo.draw()
-    used_weapons.draw()
+    ground.draw()
+    buildings.draw()
+    goo.draw()
+    weapons.draw()
     menu.draw()
-    if game_mode == "map_generator":
-        pygame.draw.line(win, (255, 0, 0), (map_ground.starting_pos_width, 0), (map_ground.starting_pos_width, screen_height))
-        pygame.draw.line(win, (255, 0, 0), (screen_width - map_ground.starting_pos_width, 0), (screen_width - map_ground.starting_pos_width, screen_height))
+    if not map_completed:
+        pygame.draw.line(win, (255, 0, 0), (ground.starting_pos_width, 0), (ground.starting_pos_width, screen_height))
+        pygame.draw.line(win, (255, 0, 0), (screen_width - ground.starting_pos_width, 0), (screen_width - ground.starting_pos_width, screen_height))
     pygame.display.update()
 
 def time():
-    gray_goo.gravity(map_ground)
-    used_weapons.time(map_ground, gray_goo)
-    buildings_on_map.time(gray_goo)
+    buildings.time(goo)
+    weapons.time(ground, goo)
+    goo.gravity(ground)
+    pygame.time.set_timer(pygame.USEREVENT, 50)
+
+def innit_game():
+    goo.analyze_map(ground)
+    buildings.add_building("mother", ground, 10)
+    buildings.add_building("base", ground, screen_width - ground.starting_pos_width)
 
 pygame.key.set_repeat(2, 30)
 run = True
-game_mode = "map_generator"
 map_completed = False
 map_analyzed = False
+time()
 while run:
+
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
 
-        if game_mode == "map_generator":
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_DOWN:
-                    map_completed = map_ground.add_segment(False)
-                elif event.key == pygame.K_UP:
-                    map_completed = map_ground.add_segment(True)
-                elif event.key == pygame.K_RIGHT:
-                    map_completed = map_ground.add_segment()
+        if event.type == pygame.USEREVENT:
+            time()
+        elif event.type == pygame.KEYDOWN and not map_completed:
+            if event.key == pygame.K_DOWN:
+                map_completed = ground.add_segment(False)
+            elif event.key == pygame.K_UP:
+                map_completed = ground.add_segment(True)
+            elif event.key == pygame.K_RIGHT:
+                map_completed = ground.add_segment()
+            elif event.key == pygame.K_l:
+                load_level()
+                map_completed = True
+            if map_completed:
+                innit_game()
+        elif event.type == pygame.KEYDOWN:
+            # save/load
+            if event.key == pygame.K_s:
+                save_level()
 
-                # save/load
-                elif event.key == pygame.K_s:
-                    save_level()
-                elif event.key == pygame.K_l:
-                    load_level()
 
                 # feature test
-                elif event.key == pygame.K_g:
-                    if not map_analyzed:
-                        gray_goo.analyze_map(map_ground)
-                        map_analyzed = True
-                    mouse_pos = pygame.mouse.get_pos()
-                    gray_goo.more_goo(*mouse_pos)
-                elif event.key == pygame.K_b:
-                    mouse_pos = pygame.mouse.get_pos()
-                    used_weapons.add_weapon("bomb", *mouse_pos)
-                elif event.key == pygame.K_n:
-                    mouse_pos = pygame.mouse.get_pos()
-                    used_weapons.add_weapon("bullet", *mouse_pos)
-                elif event.key == pygame.K_m:
-                    mouse_pos = pygame.mouse.get_pos()
-                    buildings_on_map.add_building("mother", map_ground, 10)
+                # elif event.key == pygame.K_g:
+                #     if not map_analyzed:
+                #         goo.analyze_map(ground)
+                #         map_analyzed = True
+                #     mouse_pos = pygame.mouse.get_pos()
+                #     goo.more_goo(*mouse_pos)
+                # elif event.key == pygame.K_b:
+                #     mouse_pos = pygame.mouse.get_pos()
+                #     weapons.add_weapon("bomb", *mouse_pos)
+                # elif event.key == pygame.K_n:
+                #     mouse_pos = pygame.mouse.get_pos()
+                #     weapons.add_weapon("bullet", *mouse_pos)
+                # elif event.key == pygame.K_m:
+                #     mouse_pos = pygame.mouse.get_pos()
+                #     buildings.add_building("mother", ground, mouse_pos[0])
 
-                # if map_completed:
-                #     game_mode = "game_paused"
-    time()
+
     draw()
