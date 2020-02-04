@@ -58,7 +58,6 @@ class Goo:
             for y_idx in range(0, self.grid_y_dim):
                 self.left_borders[str(x_idx) + " " + str(y_idx)] = self.find_border(x_idx, y_idx, ground, "L")
                 self.right_borders[str(x_idx) + " " + str(y_idx)] = self.find_border(x_idx, y_idx, ground, "R")
-        print(self.left_borders)
 
     def find_border(self, x_idx, y_idx, map_ground, direction):
         y_idx = y_idx

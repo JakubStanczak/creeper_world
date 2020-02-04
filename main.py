@@ -63,7 +63,7 @@ def draw():
     pygame.display.update()
 
 def time():
-    buildings.time(goo)
+    buildings.time(ground, goo, weapons)
     weapons.time(ground, goo)
     goo.gravity(ground)
     pygame.time.set_timer(pygame.USEREVENT, 50)
@@ -72,6 +72,7 @@ def innit_game():
     goo.analyze_map(ground)
     buildings.add_building("mother", ground, 10)
     buildings.add_building("base", ground, screen_width - ground.starting_pos_width)
+    ground.add_coal(15)
 
 pygame.key.set_repeat(2, 30)
 run = True
@@ -105,22 +106,23 @@ while run:
                 save_level()
 
 
-                # feature test
-                # elif event.key == pygame.K_g:
-                #     if not map_analyzed:
-                #         goo.analyze_map(ground)
-                #         map_analyzed = True
-                #     mouse_pos = pygame.mouse.get_pos()
-                #     goo.more_goo(*mouse_pos)
-                # elif event.key == pygame.K_b:
-                #     mouse_pos = pygame.mouse.get_pos()
-                #     weapons.add_weapon("bomb", *mouse_pos)
-                # elif event.key == pygame.K_n:
-                #     mouse_pos = pygame.mouse.get_pos()
-                #     weapons.add_weapon("bullet", *mouse_pos)
-                # elif event.key == pygame.K_m:
-                #     mouse_pos = pygame.mouse.get_pos()
-                #     buildings.add_building("mother", ground, mouse_pos[0])
+            # feature test
+            # elif event.key == pygame.K_g:
+            #     if not map_analyzed:
+            #         goo.analyze_map(ground)
+            #         map_analyzed = True
+            #     mouse_pos = pygame.mouse.get_pos()
+            #     goo.more_goo(*mouse_pos)
+            if event.key == pygame.K_b:
+                mouse_pos = pygame.mouse.get_pos()
+                buildings.add_building("gun", ground, mouse_pos[0])
+                # weapons.add_weapon("bomb", *mouse_pos)
+            # elif event.key == pygame.K_n:
+            #     mouse_pos = pygame.mouse.get_pos()
+            #     weapons.add_weapon("bullet", *mouse_pos)
+            # elif event.key == pygame.K_m:
+            #     mouse_pos = pygame.mouse.get_pos()
+            #     buildings.add_building("mother", ground, mouse_pos[0])
 
 
     draw()

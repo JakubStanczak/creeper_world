@@ -1,4 +1,5 @@
 import pygame
+import random
 from screen import screen_width, screen_height, win
 
 class Ground:
@@ -9,12 +10,16 @@ class Ground:
         self.current_x = 0
         self.segment_width = 10
         self.segment_step = 10
-        self.segments = []
         self.starting_pos_width = 50
+
+        self.segments = []
+        self.coals = []
 
     def draw(self):
         for segment in self.segments:
             segment.draw()
+        for coal in self.coals:
+            coal.draw()
 
     def add_segment(self, up=None):
         if self.current_x > screen_width - self.segment_width:
@@ -28,6 +33,13 @@ class Ground:
         self.segments.append(GroundSegment(self.current_x, self.current_y, self.segment_width))
         self.current_x += self.segment_width
         return False
+
+    def add_coal(self, quantity):
+        for _ in range(quantity):
+            x_idx = random.randint(0, len(self.segments) - 1)
+            x = self.segments[x_idx].x
+            y = random.randint(self.segments[x_idx].y + self.segment_width, screen_height - self.segment_width)
+            self.coals.append(Coal(x, y, self.segment_width))
 
     def clear(self):
         self.segments.clear()
@@ -52,4 +64,16 @@ class GroundSegment:
 
     def __repr__(self):
         return "x: {} y:{}".format(self.x, self.y)
+
+class Coal:
+    def __init__(self, x, y, size):
+        self.x = x
+        self.y = y
+        self.size = size
+        self.start_quantity = 100
+        self.color = (0, 0, 0)
+        self.current_quantity = self.start_quantity
+
+    def draw(self):
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.size, self.size))
 
