@@ -78,6 +78,8 @@ pygame.key.set_repeat(2, 30)
 run = True
 map_completed = False
 map_analyzed = False
+selected_building_type = None
+mouse_clicked = True
 time()
 while run:
 
@@ -104,6 +106,26 @@ while run:
             # save/load
             if event.key == pygame.K_s:
                 save_level()
+            if event.key == pygame.K_ESCAPE:
+                menu.unselect_all()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_clicked = True
+            mouse_pos = pygame.mouse.get_pos()
+            if mouse_pos[0] > screen_width:
+                selected_building_type = menu.select(*mouse_pos)
+        elif event.type == pygame.MOUSEBUTTONUP:
+            mouse_clicked = False
+
+
+    if mouse_clicked:
+        mouse_pos = pygame.mouse.get_pos()
+        if mouse_pos[0] < screen_width:
+            if selected_building_type is not None:
+                if selected_building_type in buildings_class.building_types:
+                    buildings.add_building(selected_building_type, ground, mouse_pos[0])
+                else:
+                    ground.add_tunnel(*mouse_pos, buildings.base)
+
 
 
             # feature test
@@ -113,9 +135,12 @@ while run:
             #         map_analyzed = True
             #     mouse_pos = pygame.mouse.get_pos()
             #     goo.more_goo(*mouse_pos)
-            if event.key == pygame.K_b:
-                mouse_pos = pygame.mouse.get_pos()
-                buildings.add_building("gun", ground, mouse_pos[0])
+            # if event.key == pygame.K_b:
+            #     mouse_pos = pygame.mouse.get_pos()
+            #     buildings.add_building("gun", ground, mouse_pos[0])
+            # if event.key == pygame.K_t:
+            #     mouse_pos = pygame.mouse.get_pos()
+            #     ground.add_tunnel(*mouse_pos, buildings.base)
                 # weapons.add_weapon("bomb", *mouse_pos)
             # elif event.key == pygame.K_n:
             #     mouse_pos = pygame.mouse.get_pos()

@@ -14,7 +14,10 @@ building_types = {"mother": {"size": 20, "color": (0, 0, 255), "symbol": "M", "c
 class Buildings:
     def __init__(self):
         self.building_list = []
+        self.tunnel_grid = []
         self.energy_balance = 0
+        self.mother = None
+        self.base = None
 
     def draw(self):
         for building in self.building_list:
@@ -26,12 +29,16 @@ class Buildings:
         for building in self.building_list:
             if building.x - building_types[building_type]["size"] < x < building.x + building.size:
                 return
-        self.building_list.append(Building(building_type, ground, x, y))
+        if building_type == "mother":
+            self.mother = Building("mother", x, y)
+        elif building_type == "base":
+            self.base = Building("base", x, y)
+        self.building_list.append(Building(building_type, x, y))
 
     def time(self, ground, goo, weapons):
         self.update_energy_balance()
         for building in self.building_list:
-            building.time(ground, goo, weapons, self.building_list)
+            building.time(goo, weapons)
 
     def update_energy_balance(self):
         energy_balance = 0
@@ -39,14 +46,10 @@ class Buildings:
             energy_balance += building.energy
         self.energy_balance = energy_balance
 
-
 class Building:
-    def __init__(self, building_type, ground, x, y):
+    def __init__(self, building_type, x, y):
         self.building_type = building_type
-        if building_type == "tunnel":
-            self.size = ground.segment_width
-        else:
-            self.size = building_types[self.building_type]["size"]
+        self.size = building_types[self.building_type]["size"]
         self.charge_time = building_types[self.building_type]["charge_time"]
         self.current_charge = 0
         self.health = building_types[self.building_type]["health"]
@@ -57,27 +60,26 @@ class Building:
         self.energy = building_types[self.building_type]["energy"]
         self.x = x
         self.y = y
-
         self.active = False
-        self.child = None
 
     def draw(self):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.size, self.size), 2)
         # TODO add symbol
 
-    def time(self, ground, goo, weapons, building_list):
+    def time(self, goo, weapons):
         if self.charge_time is not None:
             if self.current_charge < self.charge_time:
                 self.current_charge += 1
                 # print("{} will activate in{}".format(self.building_type, self.charge_time - self.current_charge))
             else:
                 self.current_charge = 0
-                self.activate(ground, goo, weapons, building_list)
+                self.activate(goo, weapons)
 
-    def activate(self, ground, goo, weapons, building_list):
+    def activate(self,goo, weapons):
         if self.building_type == "mother":
             goo.more_goo(self.x + self.size // 2, self.y - self.size // 2)
 
+        # TODO what if building firing range gets out of map range
         if self.range is not None:
             x_idx = self.x // goo.pix_width
             y_inx = self.y // goo.pix_height
@@ -86,25 +88,4 @@ class Building:
                     if goo.goo_grid[x_range][y_range] is not None:
                         weapons.add_weapon("bullet", x_range * goo.pix_width + goo.pix_width // 2, y_range * goo.pix_height + goo.pix_height // 2)
                         return
-
-        # if self.building_type == "barracks" and self.child is None:
-        #     self.child = Building("infantry", ground, self.x, self.y + self.size - building_types["infantry"]["size"])
-        #     building_list.append(self.child)
-
-
-        # if self.building_type == "infantry":
-        #     x_idx = self.x // goo.pix_width
-        #     y_inx = self.y // goo.pix_height
-        #     for x_range in range(x_idx + self.range, x_idx - self.range, -1):
-        #         for y_range in range(y_inx - self.range, y_inx + self.range):
-        #             if goo.goo_grid[x_range][y_range] is not None:
-        #                 weapons.add_weapon("bullet", x_range * goo.pix_width + goo.pix_width // 2, y_range * goo.pix_height + goo.pix_height // 2)
-        #                 return
-        #     self.x -= 2
-        #     self.y = ground.segments[x_idx].y - self.size
-
-
-class Tunnel:
-    def __init__(self, x, y, num):
-        pass
 

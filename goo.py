@@ -82,7 +82,7 @@ class GooPix:
         self.color = (39, 196, 196)
 
     def draw(self):
-        pygame.draw.rect(win, self.color, (self.x_idx * self.width, self.y_idx * self.height, self.width, self.height))
+        pygame.draw.rect(win, self.color, (self.x_idx * self.width, self.y_idx * self.height + 2, self.width, self.height))
 
     def gravity(self, map_ground, goo):
         ground_y_idx = map_ground.segments[self.x_idx].y // self.height
@@ -94,7 +94,7 @@ class GooPix:
 
         # TODO what if goo source is under the surface
         if goo_y_idx > ground_y_idx:
-            if self.y_idx < ground_y_idx:
+            if self.y_idx < ground_y_idx - 1:
                 self.move_to(goo, self.x_idx, self.y_idx + 1)
         else:
             if self.y_idx < goo_y_idx - 1:
