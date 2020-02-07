@@ -63,10 +63,10 @@ class Ground:
         y = y - (y % self.segment_step)
         x_idx = x // self.segment_width
         y_idx = y // self.segment_step
-        if x_idx > len(self.segments) - 2 or y_idx == (screen_height // self.segment_step) - 1:
+        if x_idx == 0 or x_idx > len(self.segments) - 2 or y_idx == (screen_height // self.segment_step) - 1:
             return
-        print("adding tunnel x_idx{} y_idx{}".format(x_idx, y_idx))
-        print("x-1 is {}".format(self.tunnel_grid[x_idx-1][y_idx]))
+        # print("adding tunnel x_idx{} y_idx{}".format(x_idx, y_idx))
+        # print("x-1 is {}".format(self.tunnel_grid[x_idx-1][y_idx]))
         if (x == base.x and y == base.y + base.size) or y > self.segments[x_idx].y:
             if (x == base.x and y == base.y + base.size) or self.tunnel_grid[x_idx-1][y_idx] is not None or self.tunnel_grid[x_idx+1][y_idx] is not None or self.tunnel_grid[x_idx][y_idx+1] is not None or self.tunnel_grid[x_idx][y_idx-1] is not None:
                 if self.tunnel_grid[x_idx][y_idx] is None:
@@ -75,7 +75,6 @@ class Ground:
                     for coal in self.coals:
                         if coal.x == x and coal.y == y:
                             coal.connected = True
-
 
 
     def clear(self):

@@ -107,7 +107,7 @@ while run:
             if event.key == pygame.K_s:
                 save_level()
             if event.key == pygame.K_ESCAPE:
-                menu.unselect_all()
+                selected_building_type = menu.unselect_all()
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_clicked = True
             mouse_pos = pygame.mouse.get_pos()
@@ -123,8 +123,11 @@ while run:
             if selected_building_type is not None:
                 if selected_building_type in buildings_class.building_types:
                     buildings.add_building(selected_building_type, ground, mouse_pos[0])
-                else:
+                elif selected_building_type == "tunnel":
                     ground.add_tunnel(*mouse_pos, buildings.base)
+                elif selected_building_type == "target":
+                    weapons.target = mouse_pos
+
 
 
 

@@ -2,13 +2,15 @@ import pygame
 from screen import win
 
 weapon_types = {
-    "bomb": {"explosion_delay": 20, "explosion_time": 5, "explosion_size": 20, "explosion_color": (255, 0, 0), "weapon_size": 5, "weapon_color": (185, 190, 0), },
-    "bullet": {"explosion_delay": 0, "explosion_time": 2, "explosion_size": 1, "explosion_color": (255, 0, 0), "weapon_size": 2, "weapon_color": (0, 0, 0)}
+    "bomb": {"explosion_delay": 100, "explosion_time": 10, "explosion_size": 20, "explosion_color": (255, 0, 0), "weapon_size": 5, "weapon_color": (185, 190, 0)},
+    "bullet": {"explosion_delay": 0, "explosion_time": 1, "explosion_size": 1, "explosion_color": (255, 0, 0), "weapon_size": 2, "weapon_color": (0, 0, 0)}
     }
 
 class Weapons:
     def __init__(self):
         self.weapon_list = []
+        self.target_size = 20
+        self.target = None
 
     def add_weapon(self, weapon_type, x, y):
         self.weapon_list.append(Weapon(weapon_type, x, y))
@@ -16,6 +18,12 @@ class Weapons:
     def draw(self):
         for weapon in self.weapon_list:
             weapon.draw()
+        if self.target is not None:
+            pygame.draw.line(win, (255, 0, 0), (self.target[0] - self.target_size // 2, self.target[1]),
+                             (self.target[0] + self.target_size // 2, self.target[1]))
+            pygame.draw.line(win, (255, 0, 0), (self.target[0], self.target[1] - self.target_size // 2),
+                             (self.target[0], self.target[1] + self.target_size // 2))
+            pygame.draw.circle(win, (255, 0, 0), self.target, self.target_size // 4)
 
     def time(self, map_ground, goo):
         for weapon in self.weapon_list:
@@ -23,8 +31,6 @@ class Weapons:
             if destroyed:
                 self.weapon_list.pop(self.weapon_list.index(weapon))
                 return
-
-
 class Weapon:
     def __init__(self, weapon_type, x, y):
         self.weapon_size = weapon_types[weapon_type]["weapon_size"]
