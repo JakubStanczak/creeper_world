@@ -18,6 +18,7 @@ menu = side_menu.SideMenu()
 weapons = weapon_class.Weapons()
 buildings = buildings_class.Buildings()
 
+
 def save_level():
     with open("level.csv", "w") as level_csv:
         fields = ["object_type", "x", "y", "width"]
@@ -32,23 +33,22 @@ def save_level():
                 log_writer.writerow(line_csv)
     print("Map saved")
 
+
 def load_level():
     ground.clear()
     goo.clear()
-    map_analyzed = False
     with open("level.csv") as level_csv:
         map_reader = csv.DictReader(level_csv)
         for line in map_reader:
             if line["object_type"] == "ground":
                 ground.segments.append(ground_class.GroundSegment(int(line["x"]), int(line["y"]), int(line["width"])))
             if line["object_type"] == "goo_pix":
-                if map_analyzed is False:
-                    goo.analyze_map(ground)
-                    map_analyzed = True
                 goo.more_goo(int(line["x"]), int(line["y"]))
     print("Map loaded")
     global map_completed
     map_completed = True
+    innit_game()
+
 
 def draw():
     win.fill((255, 255, 255))
@@ -62,16 +62,20 @@ def draw():
         pygame.draw.line(win, (255, 0, 0), (screen_width - ground.starting_pos_width, 0), (screen_width - ground.starting_pos_width, screen_height))
     pygame.display.update()
 
+
 def time():
     buildings.time(ground, goo, weapons)
     weapons.time(ground, goo)
     goo.gravity(ground)
     pygame.time.set_timer(pygame.USEREVENT, 50)
 
+
 def innit_game():
     goo.analyze_map(ground)
     buildings.add_building("mother", ground, 10)
     buildings.add_building("base", ground, screen_width - ground.starting_pos_width)
+    buildings.mother.active = True
+    buildings.base.active = True
     ground.add_coal(15)
 
 pygame.key.set_repeat(2, 30)
@@ -82,7 +86,6 @@ selected_building_type = None
 mouse_clicked = True
 time()
 while run:
-
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -115,7 +118,6 @@ while run:
                 selected_building_type = menu.select(*mouse_pos)
         elif event.type == pygame.MOUSEBUTTONUP:
             mouse_clicked = False
-
 
     if mouse_clicked:
         mouse_pos = pygame.mouse.get_pos()

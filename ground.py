@@ -76,7 +76,6 @@ class Ground:
                         if coal.x == x and coal.y == y:
                             coal.connected = True
 
-
     def clear(self):
         self.segments.clear()
 
@@ -106,23 +105,24 @@ class Coal:
         self.x = x
         self.y = y
         self.size = size
-        self.start_quantity = 100
+        self.start_quantity = 1000
         self.current_quantity = self.start_quantity
         self.connected = False
 
 
     def draw(self):
         if self.connected:
-            color = (250, 180, 0)
+            color = (100, 100, 100)
         else:
             color = (0, 0, 0)
-        pygame.draw.rect(win, color, (self.x, self.y, self.size, self.size))
+        unused_size = round((self.current_quantity / self.start_quantity) * self.size)
+        pygame.draw.rect(win, color, (self.x, self.y, self.size, unused_size))
 
 class Tunnel:
     def __init__(self, x_ind, y_ind, size):
         self.x_ind = x_ind
         self.y_ind = y_ind
-        self.color = (200, 200, 200)
+        self.color = (220, 220, 220)
         self.size = size
 
     def draw(self):

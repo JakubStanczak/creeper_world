@@ -1,24 +1,22 @@
 import pygame
 from screen import win
 
-building_types = {"mother": {"size": 20, "color": (0, 0, 255), "symbol": "M", "charge_time": 5, "health": 100, "cost": 100, "energy": 0, "range": None},
-                  "base": {"size": 20, "color": (0, 255, 0), "symbol": "BB", "charge_time": None, "health": 100, "cost": 100, "energy": 20, "range": None},
-                  "barracks": {"size": 10, "color": (0, 255, 0), "symbol": "B", "charge_time": 50, "health": 100, "cost": 100, "energy": -10, "range": None},
-                  "aircraft_base": {"size": 10, "color": (0, 255, 0), "symbol": "A", "charge_time": 100, "health": 100, "cost": 100, "energy": -20, "range": None},
-                  "gun": {"size": 10, "color": (0, 255, 0), "symbol": "G", "charge_time": 10, "health": 100, "cost": 100, "energy": -10, "range": 5},
-                  "plant": {"size": 10, "color": (0, 255, 0), "symbol": "P", "charge_time": 100, "health": 100, "cost": 100, "energy": 20, "range": None}
+building_types = {"mother": {"size": 20, "color": (0, 0, 255), "inactive_color": (0, 0, 255), "symbol": "M", "charge_time": 5, "health": 100, "cost": 0, "energy_usage": 0, "range": None},
+                  "base": {"size": 20, "color": (0, 255, 0), "inactive_color": (0, 255, 0), "symbol": "BB", "charge_time": None, "health": 100, "cost": 0, "energy_usage": -20, "range": None},
+                  "barracks": {"size": 10, "color": (0, 255, 0), "inactive_color": (255, 150, 0), "symbol": "B", "charge_time": 50, "health": 100, "cost": 1000, "energy_usage": 10, "range": None},
+                  "aircraft_base": {"size": 10, "color": (0, 255, 0), "inactive_color": (255, 150, 0), "symbol": "A", "charge_time": 100, "health": 100, "cost": 1000, "energy_usage": 20, "range": None},
+                  "gun": {"size": 10, "color": (0, 255, 0), "inactive_color": (255, 150, 0), "symbol": "G", "charge_time": 10, "health": 100, "cost": 1000, "energy_usage": 10, "range": 5},
+                  "plant": {"size": 10, "color": (0, 255, 0), "inactive_color": (255, 150, 0), "symbol": "P", "charge_time": None, "health": 100, "cost": 3000, "energy_usage": -20, "range": None}
                     }
 
 unit_types = {"infantry": {"width": 2, "height": 5, "movement_speed": 2, "color": (0, 0, 255), "symbol": "I", "charge_time": 10, "health": 1, "range": 2},
               "plane": {"width": 10, "height": 5, "movement_speed": 5,  "color": (0, 0, 255), "symbol": "I", "charge_time": None, "health": None, "range": None}
               }
 
-
 class Buildings:
     def __init__(self):
         self.building_list = []
         self.tunnel_grid = []
-        self.energy_balance = 0
         self.mother = None
         self.base = None
         self.target = [0, 0]
@@ -33,22 +31,49 @@ class Buildings:
         for building in self.building_list:
             if building.x - building_types[building_type]["size"] < x < building.x + building.size:
                 return
+        new_building = Building(building_type, x, y)
         if building_type == "mother":
-            self.mother = Building("mother", x, y)
+            self.mother = new_building
         elif building_type == "base":
-            self.base = Building("base", x, y)
-        self.building_list.append(Building(building_type, x, y))
+            self.base = new_building
+        self.building_list = self.building_list + [new_building]
 
     def time(self, ground, goo, weapons):
-        self.update_energy_balance()
-        for building in self.building_list:
-            building.time(ground, goo, weapons)
+        print()
+        energy = self.produce_energy()
+        print("energy produced {}".format(energy))
+        self.building_list.sort(key=lambda x: x.active)
+        for building in reversed(self.building_list):
+            if building.energy_usage > 0 or not building.active:
+                if (building.active and energy >= building.energy_usage) or (not building.active and energy >= building.build_speed):
+                    energy_used = building.time(ground, goo, weapons)
+                    energy -= energy_used
+                    print("building {} used {} energy and there is {} left".format(building.building_type, energy_used, energy))
+            else:
+                _ = building.time(ground, goo, weapons)
 
-    def update_energy_balance(self):
-        energy_balance = 0
+    def produce_energy(self):
+        energy_produced = 0
         for building in self.building_list:
-            energy_balance += building.energy
-        self.energy_balance = energy_balance
+            if building.active and building.energy_usage < 0:
+                energy_produced += building.energy_usage
+        energy_produced = abs(energy_produced)
+        return energy_produced
+
+    def get_energy_from_coal(self, ground, energy_needed):
+        energy_gained = 0
+        for coal in ground.coals:
+            if coal.connected:
+                if coal.current_quantity > 0:
+                    if coal.current_quantity > energy_needed:
+                        energy_gained += energy_needed
+                        energy_needed = 0
+                        coal.current_quantity = 0
+                    else:
+                        energy_needed -= coal.current_quantity
+                        energy_gained += coal.current_quantity
+                        coal.current_quantity = 0
+        return energy_gained
 
 class Building:
     def __init__(self, building_type, x, y):
@@ -60,53 +85,89 @@ class Building:
         self.cost = building_types[self.building_type]["cost"]
         self.range = building_types[self.building_type]["range"]
         self.color = building_types[self.building_type]["color"]
+        self.inactive_color = building_types[self.building_type]["inactive_color"]
         self.symbol = building_types[self.building_type]["symbol"]
-        self.energy = building_types[self.building_type]["energy"]
+        self.energy_usage = building_types[self.building_type]["energy_usage"]
         self.x = x
         self.y = y
+        self.build_speed = 10
         self.active = False
         self.unit = None
         self.symbol_color = (0, 0, 0)
         self.symbol_font = pygame.font.SysFont("calibri", 10, bold=True)
 
     def draw(self):
-        pygame.draw.rect(win, self.color, (self.x, self.y, self.size, self.size), 2)
+        if self.active:
+            color = self.color
+        else:
+            color = self.inactive_color
+        pygame.draw.rect(win, color, (self.x, self.y, self.size, self.size), 2)
         rendered_symbol = self.symbol_font.render(str(self.symbol), True, self.symbol_color)
         win.blit(rendered_symbol, (self.x, self.y))
         if self.unit is not None:
             self.unit.draw()
 
+        #  energy bar
+        if not self.active or self.charge_time is not None:
+            if not self.active:
+                energy_fraction = (building_types[self.building_type]["cost"] - self.cost) / building_types[self.building_type]["cost"]
+                color = (255, 0, 0)
+            else:
+                energy_fraction = self.current_charge / self.charge_time
+                color = (0, 0, 255)
+            len = self.size * energy_fraction
+            line_offset = 5
+            pygame.draw.line(win, color, (self.x, self.y - line_offset), (self.x + len, self.y - line_offset))
 
     def time(self, ground, goo, weapons):
-        if self.charge_time is not None:
-            if self.current_charge < self.charge_time:
-                self.current_charge += 1
-                # print("{} will activate in{}".format(self.building_type, self.charge_time - self.current_charge))
-            else:
-                self.current_charge = 0
-                self.activate(goo, weapons)
-
         if self.unit is not None:
             self.unit.time(ground, goo, weapons)
+
+        if self.active:
+            if self.charge_time is not None:
+                if self.current_charge < self.charge_time:
+                    self.current_charge += 1
+                    return self.energy_usage
+                else:
+                    activated = self.activate(goo, weapons)
+                    if activated:
+                        self.current_charge = 0
+        else:
+            self.cost -= self.build_speed
+            if self.cost <= 0:
+                self.active = True
+            return self.build_speed
+        return 0
+
+
+
 
     def activate(self, goo, weapons):
         if self.building_type == "mother":
             goo.more_goo(self.x + self.size // 2, self.y - self.size // 2)
+            return True
         elif self.building_type == "barracks":
             if self.unit is None:
                 self.unit = Unit("infantry", self.x, self.y + self.size - unit_types["infantry"]["height"], self)
+                return True
         elif self.building_type == "aircraft_base":
             if self.unit is None and weapons.target is not None:
                 self.unit = Unit("plane", self.x, self.y + self.size - unit_types["infantry"]["height"], self)
                 self.unit.bomb_dropped = False
                 self.unit.flight_alt = 20
                 self.unit.target = weapons.target
+                return True
 
         if self.range is not None:
-            _ = shoot(weapons, goo, self.x, self.y, self.range)
+            if_shot = shoot(weapons, goo, self.x, self.y, self.range)
+            if if_shot:
+                return True
+        return False
 
     def unit_dead(self):
         self.unit = None
+
+
 
 class Unit:
     def __init__(self, unit_type, x, y, mother_building):
@@ -126,7 +187,6 @@ class Unit:
 
     def draw(self):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
-
 
     def time(self, ground, goo, weapons):
         if self.charge_time is not None:
@@ -153,7 +213,6 @@ class Unit:
                     self.y += self.movement_speed
                 else:
                     self.mother_building.unit_dead()
-
 
     def activate(self, ground, goo, weapons):
         if self.unit_type == "infantry":
