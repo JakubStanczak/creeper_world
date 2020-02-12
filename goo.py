@@ -80,6 +80,7 @@ class GooPix:
         self.width = width
         self.height = height
         self.color = (39, 196, 196)
+        self.targeted = False
 
     def draw(self):
         pygame.draw.rect(win, self.color, (self.x_idx * self.width, self.y_idx * self.height + 2, self.width, self.height))
