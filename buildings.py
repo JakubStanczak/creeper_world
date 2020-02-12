@@ -46,11 +46,24 @@ class Buildings:
         for building in reversed(self.building_list):
             if building.energy_usage > 0 or not building.active:
                 if (building.active and energy >= building.energy_usage) or (not building.active and energy >= building.build_speed):
-                    energy_used = building.time(ground, goo, weapons)
+                    energy_used = building.time(ground, goo, weapons, True)
                     energy -= energy_used
                     print("building {} used {} energy and there is {} left".format(building.building_type, energy_used, energy))
+                else:
+                    if building.active:
+                        energy_needed = building.energy_usage - energy
+                        energy_from_coal = self.get_energy_from_coal(ground, energy_needed)
+                    else:
+                        energy_needed = building.build_speed - energy
+                        energy_from_coal = self.get_energy_from_coal(ground, energy_needed)
+                    if energy_from_coal == energy_needed:
+                        energy_used = building.time(ground, goo, weapons, True)
+                        energy -= energy_used
+                        print("building {} used {} energy and there is {} left, {} was from coal".format(building.building_type, energy_used, energy, energy_from_coal))
+                    else:
+                        _ = building.time(ground, goo, weapons, False)
             else:
-                _ = building.time(ground, goo, weapons)
+                _ = building.time(ground, goo, weapons, True)
 
     def produce_energy(self):
         energy_produced = 0
@@ -65,10 +78,10 @@ class Buildings:
         for coal in ground.coals:
             if coal.connected:
                 if coal.current_quantity > 0:
-                    if coal.current_quantity > energy_needed:
+                    if coal.current_quantity >= energy_needed:
                         energy_gained += energy_needed
+                        coal.current_quantity -= energy_needed
                         energy_needed = 0
-                        coal.current_quantity = 0
                     else:
                         energy_needed -= coal.current_quantity
                         energy_gained += coal.current_quantity
@@ -119,28 +132,26 @@ class Building:
             line_offset = 5
             pygame.draw.line(win, color, (self.x, self.y - line_offset), (self.x + len, self.y - line_offset))
 
-    def time(self, ground, goo, weapons):
+    def time(self, ground, goo, weapons, enough_energy):
         if self.unit is not None:
             self.unit.time(ground, goo, weapons)
 
-        if self.active:
-            if self.charge_time is not None:
-                if self.current_charge < self.charge_time:
-                    self.current_charge += 1
-                    return self.energy_usage
-                else:
-                    activated = self.activate(goo, weapons)
-                    if activated:
-                        self.current_charge = 0
-        else:
-            self.cost -= self.build_speed
-            if self.cost <= 0:
-                self.active = True
-            return self.build_speed
+        if enough_energy:
+            if self.active:
+                if self.charge_time is not None:
+                    if self.current_charge < self.charge_time:
+                        self.current_charge += 1
+                        return self.energy_usage
+                    else:
+                        activated = self.activate(goo, weapons)
+                        if activated:
+                            self.current_charge = 0
+            else:
+                self.cost -= self.build_speed
+                if self.cost <= 0:
+                    self.active = True
+                return self.build_speed
         return 0
-
-
-
 
     def activate(self, goo, weapons):
         if self.building_type == "mother":
@@ -166,7 +177,6 @@ class Building:
 
     def unit_dead(self):
         self.unit = None
-
 
 
 class Unit:
