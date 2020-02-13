@@ -1,7 +1,7 @@
 import pygame
 from screen import win
 
-building_types = {"mother": {"size": 20, "color": (0, 0, 255), "inactive_color": (0, 0, 255), "symbol": "M", "charge_time": 10, "health": 100, "cost": 0, "energy_usage": 0, "range": None},
+building_types = {"mother": {"size": 20, "color": (0, 0, 255), "inactive_color": (0, 0, 255), "symbol": "M", "charge_time": 5, "health": 100, "cost": 0, "energy_usage": 0, "range": None},
                   "base": {"size": 20, "color": (0, 255, 0), "inactive_color": (0, 255, 0), "symbol": "BB", "charge_time": None, "health": 100, "cost": 0, "energy_usage": -20, "range": None},
                   "barracks": {"size": 10, "color": (0, 255, 0), "inactive_color": (255, 150, 0), "symbol": "B", "charge_time": 60, "health": 100, "cost": 1000, "energy_usage": 10, "range": None},
                   "aircraft_base": {"size": 10, "color": (0, 255, 0), "inactive_color": (255, 150, 0), "symbol": "A", "charge_time": 150, "health": 100, "cost": 1000, "energy_usage": 20, "range": None},

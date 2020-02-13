@@ -10,8 +10,10 @@ import buildings as buildings_class
 from screen import screen_width, screen_height, win
 
 pygame.init()
-
+main_font = pygame.font.SysFont("calibri", 20, bold=False)
 pygame.display.set_caption("Gray goo by Kuba")
+
+
 ground = ground_class.Ground()
 goo = goo_class.Goo(ground.segment_width, ground.segment_step)
 menu = side_menu.SideMenu()
@@ -35,19 +37,26 @@ def save_level():
 
 
 def load_level():
-    ground.clear()
-    goo.clear()
-    with open("level.csv") as level_csv:
-        map_reader = csv.DictReader(level_csv)
-        for line in map_reader:
-            if line["object_type"] == "ground":
-                ground.segments.append(ground_class.GroundSegment(int(line["x"]), int(line["y"]), int(line["width"])))
-            if line["object_type"] == "goo_pix":
-                goo.more_goo(int(line["x"]), int(line["y"]))
-    print("Map loaded")
-    global map_completed
-    map_completed = True
-    innit_game()
+
+    try:
+        ground.clear()
+        goo.clear()
+        with open("level.csv") as level_csv:
+            map_reader = csv.DictReader(level_csv)
+            for line in map_reader:
+                if line["object_type"] == "ground":
+                    ground.segments.append(ground_class.GroundSegment(int(line["x"]), int(line["y"]), int(line["width"])))
+                if line["object_type"] == "goo_pix":
+                    goo.more_goo(int(line["x"]), int(line["y"]))
+        print("Map loaded")
+        global map_completed
+        map_completed = True
+        innit_game()
+        return True
+    except FileNotFoundError:
+        print("level file not found")
+        return False
+
 
 
 def draw():
@@ -58,8 +67,23 @@ def draw():
     weapons.draw()
     menu.draw()
     if not map_completed:
+        text = "Use arrows to make the map \n press S to save map \n press L to load map"
         pygame.draw.line(win, (255, 0, 0), (ground.starting_pos_width, 0), (ground.starting_pos_width, screen_height))
         pygame.draw.line(win, (255, 0, 0), (screen_width - ground.starting_pos_width, 0), (screen_width - ground.starting_pos_width, screen_height))
+
+    elif not first_click:
+        text = """
+        Target is simple: destroy the creep generating building.
+        Build barracks, torrents and aircraft bases - but remember they need energy
+        To produce energy dig tunnels (starting from your base) and build energy plants
+        """
+    else:
+        text = ""
+    text_lines = text.split("\n")
+    for i, line in enumerate(text_lines):
+        rendered_line = main_font.render(line, True, (0, 0, 0))
+        win.blit(rendered_line, (100, 5 + 20 * i))
+
     pygame.display.update()
 
 
@@ -77,14 +101,17 @@ def innit_game():
     buildings.mother.active = True
     buildings.base.active = True
     ground.add_coal(15)
+    global first_click
+    first_click = False
 
 pygame.key.set_repeat(2, 30)
 run = True
 map_completed = False
 map_analyzed = False
 selected_building_type = None
-mouse_clicked = True
+mouse_clicked = False
 time()
+first_click = False
 while run:
 
     for event in pygame.event.get():
@@ -101,8 +128,7 @@ while run:
             elif event.key == pygame.K_RIGHT:
                 map_completed = ground.add_segment()
             elif event.key == pygame.K_l:
-                load_level()
-                map_completed = True
+                map_completed = load_level()
             if map_completed:
                 innit_game()
         elif event.type == pygame.KEYDOWN:
@@ -120,6 +146,8 @@ while run:
             mouse_clicked = False
 
     if mouse_clicked:
+        if not first_click:
+            first_click = True
         mouse_pos = pygame.mouse.get_pos()
         if mouse_pos[0] < screen_width:
             if selected_building_type is not None:
@@ -129,30 +157,5 @@ while run:
                     ground.add_tunnel(*mouse_pos, buildings.base)
                 elif selected_building_type == "target":
                     weapons.target = mouse_pos
-
-
-
-
-            # feature test
-            # elif event.key == pygame.K_g:
-            #     if not map_analyzed:
-            #         goo.analyze_map(ground)
-            #         map_analyzed = True
-            #     mouse_pos = pygame.mouse.get_pos()
-            #     goo.more_goo(*mouse_pos)
-            # if event.key == pygame.K_b:
-            #     mouse_pos = pygame.mouse.get_pos()
-            #     buildings.add_building("gun", ground, mouse_pos[0])
-            # if event.key == pygame.K_t:
-            #     mouse_pos = pygame.mouse.get_pos()
-            #     ground.add_tunnel(*mouse_pos, buildings.base)
-                # weapons.add_weapon("bomb", *mouse_pos)
-            # elif event.key == pygame.K_n:
-            #     mouse_pos = pygame.mouse.get_pos()
-            #     weapons.add_weapon("bullet", *mouse_pos)
-            # elif event.key == pygame.K_m:
-            #     mouse_pos = pygame.mouse.get_pos()
-            #     buildings.add_building("mother", ground, mouse_pos[0])
-
 
     draw()
